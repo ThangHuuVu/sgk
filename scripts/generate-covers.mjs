@@ -70,12 +70,25 @@ function variantPathFor(localFile, width) {
   return `variants/${width}/${withoutExtension}.webp`;
 }
 
+function cachePathFor(url) {
+  if (!url || url.startsWith("/")) {
+    return url;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return `/covers/${parsed.pathname.replace(/^\/+/, "")}`;
+  } catch {
+    return url;
+  }
+}
+
 function variantsFor(localFile) {
   const widths = [220, 440, 768];
   const variants = widths
     .map((width) => ({
       width,
-      url: variantMap[variantPathFor(localFile, width)] ?? "",
+      url: cachePathFor(variantMap[variantPathFor(localFile, width)] ?? ""),
     }))
     .filter((variant) => variant.url);
 
@@ -99,8 +112,8 @@ function normalizeCover(row) {
     year: clean(row.publication_year_or_era),
     confidence: clean(row.date_confidence),
     localFile,
-    imagePath: imageMap[localFile] ?? `/${localFile}`,
-    thumbnailPath: variants.thumbnail || imageMap[localFile] || `/${localFile}`,
+    imagePath: cachePathFor(imageMap[localFile]) ?? `/${localFile}`,
+    thumbnailPath: variants.thumbnail || cachePathFor(imageMap[localFile]) || `/${localFile}`,
     imageSrcset: variants.srcset,
     sourceUrl: clean(row.page_url),
     sourceName: clean(row.source_name),
