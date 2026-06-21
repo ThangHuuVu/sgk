@@ -1,6 +1,8 @@
 <script>
   export let value = "";
   export let resultLabel = "";
+  export let describedBy = undefined;
+  export let onSubmit = () => {};
 </script>
 
 <label class="search-control">
@@ -13,6 +15,13 @@
     spellcheck="false"
     placeholder="Tìm tên sách, lớp, năm, nhà xuất bản"
     aria-label="Tìm bìa sách"
+    aria-describedby={describedBy}
+    on:keydown={(event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onSubmit();
+      }
+    }}
   />
   {#if value}
     <button

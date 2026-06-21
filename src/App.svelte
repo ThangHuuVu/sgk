@@ -10,15 +10,20 @@
   let titleBlock;
   let zoom = 1;
   let searchQuery = "";
+  let activeSearchId = "";
+  let activeSearchIndex = -1;
+  let searchAnnouncement = "";
   let showCenterButton = false;
   let isDockMinimized = true;
 
   const minZoom = 0.28;
   const maxZoom = 1.7;
   const zoomStep = 0.14;
-  const imageSizes = "(max-width: 720px) 148px, (max-width: 1180px) 210px, 220px";
-  const searchableCovers = covers.map((cover) => ({
+  const imageSizes = "(max-width: 720px) 92px, (max-width: 1180px) 190px, 200px";
+  const sortedCovers = [...covers].sort(compareCoversByYear);
+  const searchableCovers = sortedCovers.map((cover) => ({
     cover,
+    yearStart: yearStartFor(cover),
     searchText: normalizeSearchText([
       cover.title,
       cover.grade,
@@ -32,10 +37,15 @@
   }));
 
   $: normalizedQuery = normalizeSearchText([searchQuery]);
-  $: matchedCount = normalizedQuery
-    ? searchableCovers.filter((item) => item.searchText.includes(normalizedQuery)).length
-    : covers.length;
-  $: searchResultLabel = normalizedQuery ? `${matchedCount}/${covers.length}` : `${covers.length} bìa`;
+  $: rankedSearchResults = normalizedQuery ? rankSearchResults(normalizedQuery) : [];
+  $: matchingCoverIds = new Set(rankedSearchResults.map((item) => item.cover.id));
+  $: matchedCount = normalizedQuery ? rankedSearchResults.length : sortedCovers.length;
+  $: searchResultLabel = normalizedQuery ? `${matchedCount}/${sortedCovers.length}` : `${sortedCovers.length} bìa`;
+  $: if (normalizedQuery) {
+    queueSearchJump(normalizedQuery);
+  } else {
+    resetSearchJump();
+  }
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -81,6 +91,100 @@
       .replace(/Đ/g, "D")
       .toLowerCase()
       .trim();
+  }
+
+  function yearStartFor(cover) {
+    const match = String(cover.year || "").match(/\d{4}/);
+    return match ? Number(match[0]) : 9999;
+  }
+
+  function compareCoversByYear(a, b) {
+    return (
+      yearStartFor(a) - yearStartFor(b) ||
+      String(a.grade || "").localeCompare(String(b.grade || ""), "vi", { numeric: true }) ||
+      String(a.title || "").localeCompare(String(b.title || ""), "vi", { numeric: true }) ||
+      String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true })
+    );
+  }
+
+  function rankSearchResults(query) {
+    return searchableCovers
+      .map((item, sortedIndex) => ({
+        ...item,
+        sortedIndex,
+        searchScore: scoreSearch(item.searchText, query),
+      }))
+      .filter((item) => item.searchScore < Number.POSITIVE_INFINITY)
+      .sort((a, b) => a.searchScore - b.searchScore || a.sortedIndex - b.sortedIndex);
+  }
+
+  function scoreSearch(text, query) {
+    if (!query) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    if (text.includes(query)) {
+      return text.startsWith(query) ? 0 : 10 + text.indexOf(query);
+    }
+
+    const tokens = query.split(/\s+/).filter(Boolean);
+    if (tokens.length > 1) {
+      const tokenScores = tokens.map((token) => scoreSearch(text, token));
+      if (tokenScores.some((score) => score === Number.POSITIVE_INFINITY)) {
+        return Number.POSITIVE_INFINITY;
+      }
+      return 120 + tokenScores.reduce((total, score) => total + score, 0);
+    }
+
+    return fuzzyScore(text, query);
+  }
+
+  function fuzzyScore(text, query) {
+    return editDistanceScore(text, query);
+  }
+
+  function editDistanceScore(text, query) {
+    if (query.length < 4) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    const words = text
+      .split(/\s+/)
+      .filter((word) => word.length >= 4 && Math.abs(word.length - query.length) <= 1);
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    for (const word of words) {
+      const distance = editDistance(word, query);
+      const limit = query.length < 7 ? 1 : 2;
+      if (distance <= limit) {
+        bestScore = Math.min(bestScore, 160 + distance * 24 + Math.abs(word.length - query.length));
+      }
+    }
+
+    return bestScore;
+  }
+
+  function editDistance(a, b) {
+    const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+    const current = Array.from({ length: b.length + 1 }, () => 0);
+
+    for (let i = 1; i <= a.length; i += 1) {
+      current[0] = i;
+      for (let j = 1; j <= b.length; j += 1) {
+        const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1;
+        current[j] = Math.min(
+          previous[j] + 1,
+          current[j - 1] + 1,
+          previous[j - 1] + substitutionCost,
+        );
+      }
+
+      for (let j = 0; j <= b.length; j += 1) {
+        previous[j] = current[j];
+      }
+    }
+
+    return previous[b.length];
   }
 
   function getBaseSize() {
@@ -167,6 +271,71 @@
     requestAnimationFrame(updateCenterButton);
   }
 
+  function scrollCoverIntoView(coverId, behavior = "smooth") {
+    const target = document.getElementById(`cover-${coverId}`);
+    if (!target) {
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const size = viewportSize();
+    scrollViewportTo({
+      left: scrollLeft() + rect.left + rect.width / 2 - size.width / 2,
+      top: scrollTop() + rect.top + rect.height / 2 - size.height / 2,
+      behavior,
+    });
+    requestAnimationFrame(updateCenterButton);
+  }
+
+  function jumpToSearchResult(index, behavior = "smooth") {
+    if (!rankedSearchResults.length) {
+      activeSearchId = "";
+      activeSearchIndex = -1;
+      searchAnnouncement = normalizedQuery
+        ? `Không tìm thấy bìa sách phù hợp với "${searchQuery}".`
+        : "";
+      return;
+    }
+
+    const nextIndex = ((index % rankedSearchResults.length) + rankedSearchResults.length) % rankedSearchResults.length;
+    const result = rankedSearchResults[nextIndex];
+    activeSearchId = result.cover.id;
+    activeSearchIndex = nextIndex;
+    scrollCoverIntoView(result.cover.id, behavior);
+    searchAnnouncement = `Đã chuyển tới ${result.cover.title}, năm ${result.cover.year}. Kết quả ${nextIndex + 1} trong ${rankedSearchResults.length}.`;
+  }
+
+  function jumpToNextSearchResult() {
+    if (!normalizedQuery) {
+      return;
+    }
+
+    jumpToSearchResult(activeSearchIndex + 1);
+  }
+
+  let searchJumpTimeout = 0;
+  let lastJumpedQuery = "";
+
+  function queueSearchJump(query) {
+    if (query === lastJumpedQuery) {
+      return;
+    }
+
+    window.clearTimeout(searchJumpTimeout);
+    searchJumpTimeout = window.setTimeout(() => {
+      lastJumpedQuery = query;
+      jumpToSearchResult(0);
+    }, 260);
+  }
+
+  function resetSearchJump() {
+    window.clearTimeout(searchJumpTimeout);
+    lastJumpedQuery = "";
+    activeSearchId = "";
+    activeSearchIndex = -1;
+    searchAnnouncement = "";
+  }
+
   function updateCenterButton() {
     if (!titleBlock) {
       showCenterButton = false;
@@ -248,7 +417,7 @@
   }
 
   function isPriorityCover(index) {
-    return index >= 72 && index < 144;
+    return index >= 96 && index < 132;
   }
 
   onMount(() => {
@@ -306,6 +475,7 @@
       window.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
       window.clearTimeout(initialCenterTimeout);
+      window.clearTimeout(searchJumpTimeout);
       cancelAnimationFrame(resizeFrame);
       cancelAnimationFrame(scrollFrame);
     };
@@ -330,7 +500,15 @@
       </button>
     {:else}
       <div class="dock-panel">
-        <SearchField bind:value={searchQuery} resultLabel={searchResultLabel} />
+        <SearchField
+          bind:value={searchQuery}
+          resultLabel={searchResultLabel}
+          describedBy="search-announcement"
+          onSubmit={jumpToNextSearchResult}
+        />
+        <p id="search-announcement" class="sr-only" aria-live="polite">
+          {searchAnnouncement}
+        </p>
         <div class="control-cluster">
           <ViewControls
             {zoom}
@@ -383,8 +561,9 @@
 
       {#each searchableCovers as item, index (item.cover.id)}
         {@const cover = item.cover}
-        {@const isSearchMiss = normalizedQuery && !item.searchText.includes(normalizedQuery)}
+        {@const isSearchMiss = normalizedQuery && !matchingCoverIds.has(cover.id)}
         <a
+          id={`cover-${cover.id}`}
           class="specimen"
           class:is-search-miss={isSearchMiss}
           href={cover.sourceUrl || undefined}
@@ -392,6 +571,7 @@
           rel="noreferrer"
           aria-label={`${cover.title}, lớp ${cover.grade}, ${cover.year}`}
           aria-hidden={isSearchMiss ? "true" : undefined}
+          aria-current={activeSearchId === cover.id ? "true" : undefined}
           tabindex={isSearchMiss ? -1 : 0}
         >
           <figure>
@@ -415,7 +595,10 @@
 
     <aside class="site-note" aria-label="Ghi chú">
       <p>
-        Dự án phi thương mại, phục vụ lưu trữ hình ảnh và tham khảo thị giác. Bản quyền bìa sách, tên sách và nội dung liên quan thuộc về các tác giả, nhà xuất bản và đơn vị giữ quyền tương ứng.
+        Dự án phi thương mại, phục vụ lưu trữ hình ảnh và tham khảo thị giác.
+      </p>
+      <p>
+        Bản quyền bìa sách, tên sách và nội dung liên quan thuộc về các tác giả, nhà xuất bản và đơn vị giữ quyền tương ứng.
       </p>
       <p>
         Ý tưởng khung tranh cuộn hữu hạn được gợi cảm hứng từ
