@@ -10,8 +10,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "prepare:app": "node scripts/generate-covers.mjs && node scripts/sync-public-images.mjs",
+    "images:variants": "node scripts/generate-image-variants.mjs",
     "r2:upload": "node scripts/upload-r2-images.mjs",
+    "r2:upload:variants": "node scripts/upload-r2-variants.mjs",
     "cf:deploy": "npm run build && npx wrangler pages deploy dist --project-name sgk --branch main"
+  },
+  "dependencies": {
+    "sharp": "^0.34.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",

@@ -8,6 +8,7 @@
 
   const minZoom = 0.28;
   const maxZoom = 1.7;
+  const imageSizes = "(max-width: 720px) 148px, (max-width: 1180px) 210px, 220px";
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -101,13 +102,38 @@
     }
 
     return value
-      .replace("pre-2020 common textbook / ", "trước 2020 / ")
-      .replace("pre-2020 advanced upper-secondary textbook", "sách nâng cao trước 2020")
+      .replace("2018 GDPT / 2020 Grade 1 curriculum", "GDPT 2018 / chương trình lớp 1")
+      .replace("2018 GDPT / 2021 Grade 2 curriculum", "GDPT 2018 / chương trình lớp 2")
+      .replace("2018 GDPT / 2021 Grade 6 curriculum", "GDPT 2018 / chương trình lớp 6")
+      .replace("2018 GDPT / 2022 Grade 3 curriculum", "GDPT 2018 / chương trình lớp 3")
+      .replace("2018 GDPT / 2022 Grade 7 curriculum", "GDPT 2018 / chương trình lớp 7")
+      .replace("2018 GDPT / 2022 Grade 10 curriculum", "GDPT 2018 / chương trình lớp 10")
+      .replace("2018 GDPT / 2023 Grade 4 curriculum", "GDPT 2018 / chương trình lớp 4")
+      .replace("2018 GDPT / 2023 Grade 8 curriculum", "GDPT 2018 / chương trình lớp 8")
+      .replace("2018 GDPT / 2023 Grade 11 curriculum", "GDPT 2018 / chương trình lớp 11")
+      .replace("2018 GDPT / 2024 Grade 5 curriculum", "GDPT 2018 / chương trình lớp 5")
+      .replace("2018 GDPT / 2024 Grade 9 curriculum", "GDPT 2018 / chương trình lớp 9")
+      .replace("2018 GDPT / 2024 Grade 12 curriculum", "GDPT 2018 / chương trình lớp 12")
+      .replace("pre-2020 common textbook / 2002 curriculum era", "sách phổ thông trước 2020 / chương trình 2002")
+      .replace("pre-2020 common textbook / 2006 primary curriculum era", "sách tiểu học trước 2020 / chương trình 2006")
+      .replace("pre-2020 common textbook / 2006 lower-secondary curriculum era", "sách THCS trước 2020 / chương trình 2006")
+      .replace("pre-2020 common textbook / 2006 upper-secondary curriculum era", "sách THPT trước 2020 / chương trình 2006")
+      .replace("pre-2020 common textbook / ", "sách phổ thông trước 2020 / ")
+      .replace("pre-2020 advanced upper-secondary textbook", "sách nâng cao THPT trước 2020")
       .replace("pre-1981 reform / old Vietnamese primary textbook", "sách cũ trước cải cách 1981")
       .replace("post-1979 reform / pre-2002 common textbook", "sách phổ thông trước 2002")
-      .replace("2018 GDPT / 2020 Grade 1 curriculum", "GDPT 2018")
+      .replace("Cánh Diều / exact publisher not verified", "Cánh Diều / chưa xác minh NXB")
+      .replace("2020-2021 school year", "năm học 2020-2021")
+      .replace("2020-present", "từ 2020")
+      .replace("2021-present", "từ 2021")
+      .replace("2022-present", "từ 2022")
       .replace("curriculum era", "giai đoạn chương trình")
-      .replace("school year", "năm học");
+      .replace("school year", "năm học")
+      .replace("lower-secondary", "THCS")
+      .replace("upper-secondary", "THPT")
+      .replace("primary", "tiểu học")
+      .replace("textbook", "sách giáo khoa")
+      .replace("curriculum", "chương trình");
   }
 
   function displayVolume(value) {
@@ -115,11 +141,15 @@
     if (!value || normalized === "unknown" || normalized === "single volume") {
       return "";
     }
-    return value;
+    return value.replace("Tập 1 / Tập 2 listed together", "Tập 1 / Tập 2");
   }
 
   function dedupe(values) {
     return [...new Set(values)];
+  }
+
+  function isPriorityCover(index) {
+    return index >= 72 && index < 144;
   }
 
   onMount(() => {
@@ -159,20 +189,19 @@
 </script>
 
 <svelte:head>
-  <title>sgk</title>
+  <title>Kho bìa sách giáo khoa Việt Nam</title>
 </svelte:head>
 
 <div class="zoom-shell" bind:this={zoomShell}>
   <main class="canvas" aria-label="Khung tranh hữu hạn của bìa sách giáo khoa Việt Nam">
     <section class="cover-grid" aria-label="Lưới bìa sách giáo khoa">
       <section class="title-block" bind:this={titleBlock} aria-label="Tiêu đề">
-        <p class="kicker">sgk</p>
-        <h1>Kho bìa sách giáo khoa Việt Nam</h1>
+        <h1>Kho bìa sách giáo khoa<br />Việt Nam</h1>
         <p class="subtitle">1980-2026 / kho tư liệu hình ảnh đang biên soạn</p>
-        <p class="meta">{covers.length} bìa sách / lưới cuộn hữu hạn</p>
+        <p class="meta">{covers.length} bìa sách</p>
       </section>
 
-      {#each covers as cover (cover.id)}
+      {#each covers as cover, index (cover.id)}
         <a
           class="specimen"
           href={cover.sourceUrl || undefined}
@@ -181,7 +210,15 @@
           aria-label={`${cover.title}, lớp ${cover.grade}, ${cover.year}`}
         >
           <figure>
-            <img src={cover.imagePath} alt={`${cover.title}, lớp ${cover.grade}`} loading="lazy" />
+            <img
+              src={cover.thumbnailPath || cover.imagePath}
+              srcset={cover.imageSrcset || undefined}
+              sizes={cover.imageSrcset ? imageSizes : undefined}
+              alt={`${cover.title}, lớp ${cover.grade}`}
+              loading={isPriorityCover(index) ? "eager" : "lazy"}
+              decoding="async"
+              fetchpriority={isPriorityCover(index) ? "high" : "auto"}
+            />
             <figcaption>
               <b>{cover.title}</b>
               <span>{captionFor(cover)}</span>

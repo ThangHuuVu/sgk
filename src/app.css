@@ -228,15 +228,15 @@ h1 {
 
 @media (max-width: 720px) {
   :root {
-    --cover-w: 148px;
-    --cover-h: 210px;
-    --grid-cols: 4;
-    --grid-gap-x: 22px;
-    --grid-gap-y: 54px;
-    --grid-top: 260px;
-    --canvas-gutter: 22px;
-    --grid-w: 658px;
-    --canvas-h: 66550px;
+    --cover-w: 220px;
+    --cover-h: 311px;
+    --grid-cols: 24;
+    --grid-gap-x: 42px;
+    --grid-gap-y: 84px;
+    --grid-top: 420px;
+    --canvas-gutter: 210px;
+    --grid-w: 6246px;
+    --canvas-h: 16550px;
   }
 
   body {
@@ -244,9 +244,9 @@ h1 {
   }
 
   .title-block {
-    grid-column: 1 / -1;
-    grid-row: 5;
-    padding-inline: 0;
+    grid-column: 9 / span 8;
+    grid-row: 6;
+    padding-inline: 26px;
   }
 
   .kicker {
@@ -254,24 +254,24 @@ h1 {
   }
 
   h1 {
-    font-size: 30px;
+    font-size: 44px;
   }
 
   .subtitle {
-    margin-top: 14px;
-    font-size: 10px;
+    margin-top: 18px;
+    font-size: 11px;
   }
 
   .meta {
-    margin-top: 14px;
-    font-size: 11px;
+    margin-top: 18px;
+    font-size: 12px;
   }
 
   .specimen figcaption {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .specimen b {
-    font-size: 11px;
+    font-size: 12px;
   }
 }

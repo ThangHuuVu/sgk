@@ -2,6 +2,7 @@ node_modules
 dist
 .vercel
 .env*.local
+generated
 images
 public/images
 src/lib/covers.js

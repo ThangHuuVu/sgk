@@ -6,8 +6,12 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const csvPath = join(root, "metadata.csv");
 const outputPath = join(root, "src", "lib", "covers.js");
 const r2MapPath = join(root, "r2-map.json");
+const r2VariantMapPath = join(root, "r2-variant-map.json");
 const imageMap = existsSync(r2MapPath)
   ? JSON.parse(readFileSync(r2MapPath, "utf8"))
+  : {};
+const variantMap = existsSync(r2VariantMapPath)
+  ? JSON.parse(readFileSync(r2VariantMapPath, "utf8"))
   : {};
 
 function parseCsv(text) {
@@ -59,8 +63,31 @@ function clean(value) {
   return value?.trim() ?? "";
 }
 
+function variantPathFor(localFile, width) {
+  const normalizedFile = localFile.replace(/^images\//, "");
+  const extensionIndex = normalizedFile.lastIndexOf(".");
+  const withoutExtension = extensionIndex === -1 ? normalizedFile : normalizedFile.slice(0, extensionIndex);
+  return `variants/${width}/${withoutExtension}.webp`;
+}
+
+function variantsFor(localFile) {
+  const widths = [220, 440, 768];
+  const variants = widths
+    .map((width) => ({
+      width,
+      url: variantMap[variantPathFor(localFile, width)] ?? "",
+    }))
+    .filter((variant) => variant.url);
+
+  return {
+    thumbnail: variants[0]?.url ?? "",
+    srcset: variants.map((variant) => `${variant.url} ${variant.width}w`).join(", "),
+  };
+}
+
 function normalizeCover(row) {
   const localFile = clean(row.local_file);
+  const variants = variantsFor(localFile);
   return {
     id: clean(row.id),
     title: clean(row.title),
@@ -73,6 +100,8 @@ function normalizeCover(row) {
     confidence: clean(row.date_confidence),
     localFile,
     imagePath: imageMap[localFile] ?? `/${localFile}`,
+    thumbnailPath: variants.thumbnail || imageMap[localFile] || `/${localFile}`,
+    imageSrcset: variants.srcset,
     sourceUrl: clean(row.page_url),
     sourceName: clean(row.source_name),
   };
