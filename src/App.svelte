@@ -40,6 +40,19 @@
     return Math.min(max, Math.max(min, value));
   }
 
+  function viewportSize() {
+    return {
+      width: window.visualViewport?.width ?? window.innerWidth,
+      height: window.visualViewport?.height ?? window.innerHeight,
+    };
+  }
+
+  function syncVisualViewportVars() {
+    const viewport = viewportSize();
+    document.documentElement.style.setProperty("--visual-viewport-w", `${viewport.width}px`);
+    document.documentElement.style.setProperty("--visual-viewport-h", `${viewport.height}px`);
+  }
+
   function normalizeSearchText(values) {
     return values
       .filter(Boolean)
@@ -85,15 +98,18 @@
     zoomShell.style.height = inlineHeight;
   }
 
-  function setZoom(nextZoom, anchorX = window.innerWidth / 2, anchorY = window.innerHeight / 2) {
+  function setZoom(nextZoom, anchorX, anchorY) {
     if (!zoomShell) {
       return;
     }
 
     const previousZoom = zoom;
     const next = clamp(nextZoom, minZoom, maxZoom);
-    const worldX = (window.scrollX + anchorX) / previousZoom;
-    const worldY = (window.scrollY + anchorY) / previousZoom;
+    const viewport = viewportSize();
+    const anchorLeft = anchorX ?? viewport.width / 2;
+    const anchorTop = anchorY ?? viewport.height / 2;
+    const worldX = (window.scrollX + anchorLeft) / previousZoom;
+    const worldY = (window.scrollY + anchorTop) / previousZoom;
     const { width, height } = getBaseSize();
 
     zoom = next;
@@ -103,8 +119,8 @@
 
     requestAnimationFrame(() => {
       window.scrollTo({
-        left: worldX * next - anchorX,
-        top: worldY * next - anchorY,
+        left: worldX * next - anchorLeft,
+        top: worldY * next - anchorTop,
         behavior: "instant",
       });
     });
@@ -124,9 +140,10 @@
     }
 
     const rect = titleBlock.getBoundingClientRect();
+    const viewport = viewportSize();
     window.scrollTo({
-      left: window.scrollX + rect.left + rect.width / 2 - window.innerWidth / 2,
-      top: window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2,
+      left: window.scrollX + rect.left + rect.width / 2 - viewport.width / 2,
+      top: window.scrollY + rect.top + rect.height / 2 - viewport.height / 2,
       behavior,
     });
     requestAnimationFrame(updateCenterButton);
@@ -141,11 +158,12 @@
     const rect = titleBlock.getBoundingClientRect();
     const titleX = rect.left + rect.width / 2;
     const titleY = rect.top + rect.height / 2;
-    const viewportX = window.innerWidth / 2;
-    const viewportY = window.innerHeight / 2;
+    const viewport = viewportSize();
+    const viewportX = viewport.width / 2;
+    const viewportY = viewport.height / 2;
     const distance = Math.hypot(titleX - viewportX, titleY - viewportY);
 
-    showCenterButton = distance > 360;
+    showCenterButton = distance > Math.min(360, viewport.width * 0.5);
   }
 
   function captionFor(cover) {
@@ -216,9 +234,17 @@
   }
 
   onMount(() => {
+    syncVisualViewportVars();
     measureBaseSize();
     setZoom(1);
-    requestAnimationFrame(() => requestAnimationFrame(centerTitle));
+
+    function queueInitialCenter() {
+      centerTitle();
+      requestAnimationFrame(updateCenterButton);
+    }
+
+    requestAnimationFrame(() => requestAnimationFrame(queueInitialCenter));
+    const initialCenterTimeout = window.setTimeout(queueInitialCenter, 450);
 
     function onWheel(event) {
       if (!event.ctrlKey && !event.metaKey) {
@@ -240,20 +266,24 @@
     function onResize() {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
+        syncVisualViewportVars();
         measureBaseSize();
         setZoom(zoom);
-        requestAnimationFrame(centerTitle);
+        requestAnimationFrame(updateCenterButton);
       });
     }
 
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("scroll", queueCenterButtonUpdate, { passive: true });
     window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
 
     return () => {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("scroll", queueCenterButtonUpdate);
       window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+      window.clearTimeout(initialCenterTimeout);
       cancelAnimationFrame(resizeFrame);
       cancelAnimationFrame(scrollFrame);
     };

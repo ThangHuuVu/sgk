@@ -13,6 +13,8 @@
   --shadow-soft: 0 16px 42px rgba(22, 19, 15, 0.14);
   --control-h: 38px;
   --control-radius: 6px;
+  --visual-viewport-w: 100vw;
+  --visual-viewport-h: 100vh;
   --zoom: 1;
   --cover-w: 220px;
   --cover-h: 311px;
@@ -572,43 +574,117 @@ h1 {
 
   .app-controls {
     right: auto;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    left: 50vw;
-    width: min(calc(100dvw - 20px), 560px);
-    align-items: stretch;
+    bottom: auto;
+    top: calc(var(--visual-viewport-h) - 12px - env(safe-area-inset-bottom, 0px));
+    left: calc(var(--visual-viewport-w) / 2);
+    width: min(calc(var(--visual-viewport-w) - 16px), 560px);
+    min-height: 44px;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    transform: translate(-50%, -100%);
   }
 
   .app-controls.is-minimized {
     width: auto;
   }
+
+  .dock-panel {
+    gap: 4px;
+  }
+
+  .search-control {
+    min-width: 0;
+    height: 34px;
+    flex: 1 1 108px;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 3px;
+    padding: 0 6px 0 8px;
+  }
+
+  .search-control input {
+    font-size: 12px;
+  }
+
+  .search-control input::placeholder {
+    color: transparent;
+  }
+
+  .search-result {
+    display: none;
+  }
+
+  .control-icon {
+    font-size: 18px;
+  }
+
+  .inline-clear {
+    width: 24px;
+    height: 24px;
+  }
+
+  .control-cluster,
+  .view-controls {
+    gap: 1px;
+  }
+
+  .control-cluster {
+    flex: 0 0 auto;
+    margin-left: 0;
+  }
+
+  .control-button,
+  .control-button.is-compact {
+    width: 32px;
+    height: 34px;
+    font-size: 17px;
+  }
+
+  .zoom-readout {
+    min-width: 44px;
+    height: 34px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
+
+  .dock-end-controls {
+    gap: 1px;
+    margin-left: 2px;
+  }
+
+  .dock-toggle {
+    height: 34px;
+    padding: 0 8px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
 }
 
 @media (max-width: 620px) {
   .app-controls {
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .dock-panel {
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .search-control {
     width: 100%;
     max-width: none;
-    flex-basis: auto;
   }
 
   .control-cluster {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    justify-content: flex-end;
   }
 
   .view-controls {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
   }
 
   .zoom-readout {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
   }
 }
