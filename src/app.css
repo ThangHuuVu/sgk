@@ -525,15 +525,15 @@ h1 {
 
 @media (max-width: 720px) {
   :root {
-    --cover-w: 220px;
-    --cover-h: 311px;
-    --grid-cols: 24;
-    --grid-gap-x: 42px;
-    --grid-gap-y: 84px;
-    --grid-top: 260px;
-    --canvas-gutter: 90px;
-    --grid-w: 6246px;
-    --canvas-h: 16380px;
+    --cover-w: 148px;
+    --cover-h: 209px;
+    --grid-cols: 8;
+    --grid-gap-x: 28px;
+    --grid-gap-y: 58px;
+    --grid-top: 190px;
+    --canvas-gutter: 24px;
+    --grid-w: 1380px;
+    --canvas-h: 33600px;
   }
 
   body {
@@ -541,9 +541,12 @@ h1 {
   }
 
   .title-block {
-    grid-column: 11 / span 4;
+    width: min(calc(var(--visual-viewport-w) - 34px), 340px);
+    min-height: calc(var(--cover-h) + 54px);
+    grid-column: 1 / span 2;
     grid-row: 6;
-    padding-inline: 26px;
+    justify-self: center;
+    padding: 0 8px 42px;
   }
 
   .kicker {
@@ -551,12 +554,14 @@ h1 {
   }
 
   h1 {
-    font-size: 44px;
+    font-size: clamp(32px, 9.2vw, 40px);
   }
 
   .subtitle {
-    margin-top: 18px;
-    font-size: 11px;
+    max-width: 310px;
+    margin-top: 14px;
+    font-size: 10px;
+    line-height: 1.45;
   }
 
   .meta {
@@ -565,11 +570,11 @@ h1 {
   }
 
   .specimen figcaption {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .specimen b {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .app-controls {
