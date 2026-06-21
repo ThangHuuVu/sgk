@@ -415,13 +415,13 @@
 
     <aside class="site-note" aria-label="Ghi chú">
       <p>
-        Dự án phi thương mại, phục vụ lưu trữ hình ảnh và tham khảo thị giác. Bản quyền bìa sách, tên sách và nội dung liên quan thuộc về
-        <br />
-        các tác giả, nhà xuất bản và đơn vị giữ quyền tương ứng.
+        Dự án phi thương mại, phục vụ lưu trữ hình ảnh và tham khảo thị giác. Bản quyền bìa sách, tên sách và nội dung liên quan thuộc về các tác giả, nhà xuất bản và đơn vị giữ quyền tương ứng.
       </p>
       <p>
         Ý tưởng khung tranh cuộn hữu hạn được gợi cảm hứng từ
         <a href="https://www.ciggies.app/" target="_blank" rel="noreferrer">ciggies.app</a>.
+        Font chữ Danh Đá của
+        <a href="https://republi.sh/#danhda/info" target="_blank" rel="noreferrer">Giang Nguyen</a>.
         Mã nguồn mở miễn phí:
         <a href="https://github.com/ThangHuuVu/sgk" target="_blank" rel="noreferrer">GitHub</a>
       </p>

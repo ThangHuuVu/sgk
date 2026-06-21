@@ -1,3 +1,11 @@
+@font-face {
+  font-display: swap;
+  font-family: "Danh Da";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/fonts/DanhDa-Bold.woff2") format("woff2");
+}
+
 :root {
   --ink: #16130f;
   --muted: #716a5e;
@@ -382,7 +390,8 @@ input {
 h1 {
   max-width: 720px;
   margin: 0 auto;
-  font-size: 52px;
+  font-family: "Danh Da", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: 82px;
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: 0;
@@ -536,7 +545,7 @@ h1 {
   }
 
   h1 {
-    font-size: 42px;
+    font-size: 66px;
   }
 }
 
@@ -571,7 +580,7 @@ h1 {
   }
 
   h1 {
-    font-size: clamp(27px, 7.4vw, 32px);
+    font-size: clamp(42px, 11.5vw, 50px);
   }
 
   .subtitle {
