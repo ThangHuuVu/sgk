@@ -5,9 +5,9 @@ import { fileURLToPath } from "node:url";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const csvPath = join(root, "metadata.csv");
 const outputPath = join(root, "src", "lib", "covers.js");
-const blobMapPath = join(root, "blob-map.json");
-const blobMap = existsSync(blobMapPath)
-  ? JSON.parse(readFileSync(blobMapPath, "utf8"))
+const r2MapPath = join(root, "r2-map.json");
+const imageMap = existsSync(r2MapPath)
+  ? JSON.parse(readFileSync(r2MapPath, "utf8"))
   : {};
 
 function parseCsv(text) {
@@ -72,7 +72,7 @@ function normalizeCover(row) {
     year: clean(row.publication_year_or_era),
     confidence: clean(row.date_confidence),
     localFile,
-    imagePath: blobMap[localFile] ?? `/${localFile}`,
+    imagePath: imageMap[localFile] ?? `/${localFile}`,
     sourceUrl: clean(row.page_url),
     sourceName: clean(row.source_name),
   };
