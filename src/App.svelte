@@ -48,9 +48,12 @@
   }
 
   function syncVisualViewportVars() {
+    const visualViewport = window.visualViewport;
     const viewport = viewportSize();
     document.documentElement.style.setProperty("--visual-viewport-w", `${viewport.width}px`);
     document.documentElement.style.setProperty("--visual-viewport-h", `${viewport.height}px`);
+    document.documentElement.style.setProperty("--visual-viewport-left", `${visualViewport?.offsetLeft ?? 0}px`);
+    document.documentElement.style.setProperty("--visual-viewport-top", `${visualViewport?.offsetTop ?? 0}px`);
   }
 
   function normalizeSearchText(values) {
@@ -258,9 +261,12 @@
 
     let resizeFrame = 0;
     let scrollFrame = 0;
-    function queueCenterButtonUpdate() {
+    function queueViewportUpdate() {
       cancelAnimationFrame(scrollFrame);
-      scrollFrame = requestAnimationFrame(updateCenterButton);
+      scrollFrame = requestAnimationFrame(() => {
+        syncVisualViewportVars();
+        updateCenterButton();
+      });
     }
 
     function onResize() {
@@ -274,14 +280,16 @@
     }
 
     window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("scroll", queueCenterButtonUpdate, { passive: true });
+    window.addEventListener("scroll", queueViewportUpdate, { passive: true });
     window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("scroll", queueViewportUpdate, { passive: true });
     window.visualViewport?.addEventListener("resize", onResize);
 
     return () => {
       window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("scroll", queueCenterButtonUpdate);
+      window.removeEventListener("scroll", queueViewportUpdate);
       window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("scroll", queueViewportUpdate);
       window.visualViewport?.removeEventListener("resize", onResize);
       window.clearTimeout(initialCenterTimeout);
       cancelAnimationFrame(resizeFrame);

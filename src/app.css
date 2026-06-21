@@ -15,6 +15,8 @@
   --control-radius: 6px;
   --visual-viewport-w: 100vw;
   --visual-viewport-h: 100vh;
+  --visual-viewport-left: 0px;
+  --visual-viewport-top: 0px;
   --zoom: 1;
   --cover-w: 220px;
   --cover-h: 311px;
@@ -580,8 +582,11 @@ h1 {
   .app-controls {
     right: auto;
     bottom: auto;
-    top: calc(var(--visual-viewport-h) - 12px - env(safe-area-inset-bottom, 0px));
-    left: calc(var(--visual-viewport-w) / 2);
+    top: calc(
+      var(--visual-viewport-top) + var(--visual-viewport-h) - 12px -
+        env(safe-area-inset-bottom, 0px)
+    );
+    left: calc(var(--visual-viewport-left) + (var(--visual-viewport-w) / 2));
     width: min(calc(var(--visual-viewport-w) - 16px), 560px);
     min-height: 44px;
     align-items: center;
