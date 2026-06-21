@@ -21,11 +21,11 @@
   --cover-w: 220px;
   --cover-h: 311px;
   --grid-cols: 24;
-  --grid-gap-x: 42px;
+  --grid-gap-x: 22px;
   --grid-gap-y: 84px;
   --grid-top: 260px;
   --canvas-gutter: 90px;
-  --grid-w: 6246px;
+  --grid-w: 5786px;
   --canvas-w: calc(var(--grid-w) + (2 * var(--canvas-gutter)));
   --canvas-h: 16380px;
 }
@@ -37,13 +37,13 @@
 html,
 body,
 #app {
-  min-width: 100%;
-  min-height: 100%;
+  width: 100%;
+  height: 100%;
   margin: 0;
 }
 
 body {
-  overflow: scroll;
+  overflow: hidden;
   background:
     radial-gradient(circle at 18% 8%, rgba(157, 53, 39, 0.07), transparent 24rem),
     var(--paper);
@@ -60,12 +60,26 @@ input {
   font: inherit;
 }
 
-.app-controls {
+.app-viewport {
   position: fixed;
-  right: 16px;
+  inset: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-controls-layer {
+  position: fixed;
+  right: 0;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  left: 50vw;
+  left: 0;
   z-index: 100;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.app-controls {
   display: flex;
   width: min(calc(100dvw - 32px), 560px);
   min-height: calc(var(--control-h) + 10px);
@@ -79,12 +93,11 @@ input {
   border: 1px solid var(--line);
   border-radius: var(--control-radius);
   box-shadow: var(--shadow-soft);
+  pointer-events: auto;
   backdrop-filter: blur(18px) saturate(1.08);
-  transform: translateX(-50%);
 }
 
 .app-controls.is-minimized {
-  right: auto;
   width: auto;
   min-height: 0;
   padding: 4px;
@@ -335,12 +348,12 @@ input {
 .title-block {
   display: flex;
   min-height: calc(var(--cover-h) + 54px);
-  grid-column: 11 / span 4;
+  grid-column: 12 / span 2;
   grid-row: 6;
   flex-direction: column;
   justify-content: center;
   align-self: stretch;
-  padding: 0 26px 54px;
+  padding: 0 10px 54px;
   pointer-events: none;
   text-align: center;
 }
@@ -579,20 +592,18 @@ h1 {
     font-size: 11px;
   }
 
+  .app-controls-layer {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 0 8px;
+  }
+
   .app-controls {
-    right: auto;
-    bottom: auto;
-    top: calc(
-      var(--visual-viewport-top) + var(--visual-viewport-h) - 12px -
-        env(safe-area-inset-bottom, 0px)
-    );
-    left: calc(var(--visual-viewport-left) + (var(--visual-viewport-w) / 2));
     width: min(calc(var(--visual-viewport-w) - 16px), 560px);
     min-height: 44px;
     align-items: center;
+    justify-content: space-between;
     gap: 4px;
     padding: 4px;
-    transform: translate(-50%, -100%);
   }
 
   .app-controls.is-minimized {

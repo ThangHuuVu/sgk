@@ -5,6 +5,7 @@
   import SearchField from "./lib/components/SearchField.svelte";
   import ViewControls from "./lib/components/ViewControls.svelte";
 
+  let viewport;
   let zoomShell;
   let titleBlock;
   let zoom = 1;
@@ -42,18 +43,32 @@
 
   function viewportSize() {
     return {
-      width: window.visualViewport?.width ?? window.innerWidth,
-      height: window.visualViewport?.height ?? window.innerHeight,
+      width: viewport?.clientWidth ?? window.innerWidth,
+      height: viewport?.clientHeight ?? window.innerHeight,
     };
   }
 
   function syncVisualViewportVars() {
-    const visualViewport = window.visualViewport;
-    const viewport = viewportSize();
-    document.documentElement.style.setProperty("--visual-viewport-w", `${viewport.width}px`);
-    document.documentElement.style.setProperty("--visual-viewport-h", `${viewport.height}px`);
-    document.documentElement.style.setProperty("--visual-viewport-left", `${visualViewport?.offsetLeft ?? 0}px`);
-    document.documentElement.style.setProperty("--visual-viewport-top", `${visualViewport?.offsetTop ?? 0}px`);
+    const size = viewportSize();
+    document.documentElement.style.setProperty("--visual-viewport-w", `${size.width}px`);
+    document.documentElement.style.setProperty("--visual-viewport-h", `${size.height}px`);
+  }
+
+  function scrollLeft() {
+    return viewport?.scrollLeft ?? window.scrollX;
+  }
+
+  function scrollTop() {
+    return viewport?.scrollTop ?? window.scrollY;
+  }
+
+  function scrollViewportTo(options) {
+    if (viewport) {
+      viewport.scrollTo(options);
+      return;
+    }
+
+    window.scrollTo(options);
   }
 
   function normalizeSearchText(values) {
@@ -108,11 +123,11 @@
 
     const previousZoom = zoom;
     const next = clamp(nextZoom, minZoom, maxZoom);
-    const viewport = viewportSize();
-    const anchorLeft = anchorX ?? viewport.width / 2;
-    const anchorTop = anchorY ?? viewport.height / 2;
-    const worldX = (window.scrollX + anchorLeft) / previousZoom;
-    const worldY = (window.scrollY + anchorTop) / previousZoom;
+    const size = viewportSize();
+    const anchorLeft = anchorX ?? size.width / 2;
+    const anchorTop = anchorY ?? size.height / 2;
+    const worldX = (scrollLeft() + anchorLeft) / previousZoom;
+    const worldY = (scrollTop() + anchorTop) / previousZoom;
     const { width, height } = getBaseSize();
 
     zoom = next;
@@ -121,7 +136,7 @@
     document.documentElement.style.setProperty("--zoom", String(next));
 
     requestAnimationFrame(() => {
-      window.scrollTo({
+      scrollViewportTo({
         left: worldX * next - anchorLeft,
         top: worldY * next - anchorTop,
         behavior: "instant",
@@ -143,10 +158,10 @@
     }
 
     const rect = titleBlock.getBoundingClientRect();
-    const viewport = viewportSize();
-    window.scrollTo({
-      left: window.scrollX + rect.left + rect.width / 2 - viewport.width / 2,
-      top: window.scrollY + rect.top + rect.height / 2 - viewport.height / 2,
+    const size = viewportSize();
+    scrollViewportTo({
+      left: scrollLeft() + rect.left + rect.width / 2 - size.width / 2,
+      top: scrollTop() + rect.top + rect.height / 2 - size.height / 2,
       behavior,
     });
     requestAnimationFrame(updateCenterButton);
@@ -161,12 +176,12 @@
     const rect = titleBlock.getBoundingClientRect();
     const titleX = rect.left + rect.width / 2;
     const titleY = rect.top + rect.height / 2;
-    const viewport = viewportSize();
-    const viewportX = viewport.width / 2;
-    const viewportY = viewport.height / 2;
+    const size = viewportSize();
+    const viewportX = size.width / 2;
+    const viewportY = size.height / 2;
     const distance = Math.hypot(titleX - viewportX, titleY - viewportY);
 
-    showCenterButton = distance > Math.min(360, viewport.width * 0.5);
+    showCenterButton = distance > Math.min(360, size.width * 0.5);
   }
 
   function captionFor(cover) {
@@ -279,17 +294,16 @@
       });
     }
 
-    window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("scroll", queueViewportUpdate, { passive: true });
+    const scrollTarget = viewport ?? window;
+    scrollTarget.addEventListener("wheel", onWheel, { passive: false });
+    scrollTarget.addEventListener("scroll", queueViewportUpdate, { passive: true });
     window.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("scroll", queueViewportUpdate, { passive: true });
     window.visualViewport?.addEventListener("resize", onResize);
 
     return () => {
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("scroll", queueViewportUpdate);
+      scrollTarget.removeEventListener("wheel", onWheel);
+      scrollTarget.removeEventListener("scroll", queueViewportUpdate);
       window.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("scroll", queueViewportUpdate);
       window.visualViewport?.removeEventListener("resize", onResize);
       window.clearTimeout(initialCenterTimeout);
       cancelAnimationFrame(resizeFrame);
@@ -302,59 +316,62 @@
   <title>Kho bìa sách giáo khoa Việt Nam</title>
 </svelte:head>
 
-<aside class:is-minimized={isDockMinimized} class="app-controls" aria-label="Công cụ xem kho bìa">
-  {#if isDockMinimized}
-    <button
-      class="dock-toggle"
-      type="button"
-      aria-label="Hiện thanh công cụ"
-      title="Hiện thanh công cụ"
-      on:click={() => (isDockMinimized = false)}
-    >
-      Công cụ
-    </button>
-  {:else}
-    <div class="dock-panel">
-      <SearchField bind:value={searchQuery} resultLabel={searchResultLabel} />
-      <div class="control-cluster">
-        <ViewControls
-          {zoom}
-          {minZoom}
-          {maxZoom}
-          onZoomOut={() => adjustZoom(-zoomStep)}
-          onZoomIn={() => adjustZoom(zoomStep)}
-          onResetZoom={resetZoom}
-        />
-        <div class="dock-end-controls">
-          <IconButton
-            label="Về trung tâm"
-            title="Về trung tâm"
-            variant="compact"
-            pressed={!showCenterButton}
-            on:click={() => centerTitle("smooth")}
-          >
-            ⌖
-          </IconButton>
-          <button
-            class="dock-toggle"
-            type="button"
-            aria-label="Ẩn thanh công cụ"
-            title="Ẩn thanh công cụ"
-            on:click={() => (isDockMinimized = true)}
-          >
-            Ẩn
-          </button>
+<div class="app-controls-layer">
+  <aside class:is-minimized={isDockMinimized} class="app-controls" aria-label="Công cụ xem kho bìa">
+    {#if isDockMinimized}
+      <button
+        class="dock-toggle"
+        type="button"
+        aria-label="Hiện thanh công cụ"
+        title="Hiện thanh công cụ"
+        on:click={() => (isDockMinimized = false)}
+      >
+        Công cụ
+      </button>
+    {:else}
+      <div class="dock-panel">
+        <SearchField bind:value={searchQuery} resultLabel={searchResultLabel} />
+        <div class="control-cluster">
+          <ViewControls
+            {zoom}
+            {minZoom}
+            {maxZoom}
+            onZoomOut={() => adjustZoom(-zoomStep)}
+            onZoomIn={() => adjustZoom(zoomStep)}
+            onResetZoom={resetZoom}
+          />
+          <div class="dock-end-controls">
+            <IconButton
+              label="Về trung tâm"
+              title="Về trung tâm"
+              variant="compact"
+              pressed={!showCenterButton}
+              on:click={() => centerTitle("smooth")}
+            >
+              ⌖
+            </IconButton>
+            <button
+              class="dock-toggle"
+              type="button"
+              aria-label="Ẩn thanh công cụ"
+              title="Ẩn thanh công cụ"
+              on:click={() => (isDockMinimized = true)}
+            >
+              Ẩn
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  {/if}
-</aside>
+    {/if}
+  </aside>
+</div>
 
-<div class="zoom-shell" bind:this={zoomShell}>
-  <main class="canvas" aria-label="Khung tranh hữu hạn của bìa sách giáo khoa Việt Nam">
+<div class="app-viewport" bind:this={viewport}>
+  <div class="zoom-shell" bind:this={zoomShell}>
+    <main class="canvas" aria-label="Khung tranh hữu hạn của bìa sách giáo khoa Việt Nam">
     <section class="cover-grid" aria-label="Lưới bìa sách giáo khoa">
       <section class="title-block" bind:this={titleBlock} aria-label="Tiêu đề">
-        <h1>Kho bìa sách giáo khoa<br />Việt Nam</h1>
+        <h1>Kho bìa sách giáo khoa Việt Nam</h1>
         <p class="subtitle">
           1980-2026 / kho tư liệu hình ảnh đang biên soạn / {covers.length} bìa sách
         </p>
@@ -409,5 +426,6 @@
         <a href="https://github.com/ThangHuuVu/sgk" target="_blank" rel="noreferrer">GitHub</a>
       </p>
     </aside>
-  </main>
+    </main>
+  </div>
 </div>
