@@ -357,7 +357,7 @@ input {
   display: flex;
   width: calc((var(--cover-w) * 3) + (var(--grid-gap-x) * 2));
   min-height: calc(var(--cover-h) + 54px);
-  grid-column: 11 / span 4;
+  grid-column: 11 / span 3;
   grid-row: 6;
   flex-direction: column;
   justify-content: center;
