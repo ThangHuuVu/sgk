@@ -70,6 +70,24 @@ function uploadWithWrangler(pathname, file) {
   });
 }
 
+async function uploadWithRetry(pathname, file) {
+  const attempts = Number(process.env.R2_UPLOAD_ATTEMPTS ?? 4);
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await uploadWithWrangler(pathname, file);
+    } catch (error) {
+      if (attempt === attempts) {
+        throw error;
+      }
+
+      const waitMs = 1500 * attempt;
+      console.warn(`Thử lại ${pathname} sau lỗi upload (${attempt}/${attempts})...`);
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+  }
+}
+
 function listFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
@@ -84,7 +102,7 @@ const nextMap = { ...existingMap };
 const files = listFiles(imageRoot);
 let uploaded = 0;
 let cursor = 0;
-const concurrency = Number(process.env.R2_UPLOAD_CONCURRENCY ?? 6);
+const concurrency = Number(process.env.R2_UPLOAD_CONCURRENCY ?? 3);
 
 async function worker() {
   while (cursor < files.length) {
@@ -94,7 +112,7 @@ async function worker() {
 
     if (nextMap[pathname]) continue;
 
-    nextMap[pathname] = await uploadWithWrangler(pathname, file);
+    nextMap[pathname] = await uploadWithRetry(pathname, file);
     uploaded += 1;
 
     if (uploaded % 25 === 0) {

@@ -6,5 +6,4 @@ images
 public/images
 src/lib/covers.js
 sources
-r2-map.json
 .env*.local
