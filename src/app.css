@@ -17,7 +17,7 @@
   --canvas-gutter: 210px;
   --grid-w: 6246px;
   --canvas-w: calc(var(--grid-w) + (2 * var(--canvas-gutter)));
-  --canvas-h: 62000px;
+  --canvas-h: 16550px;
 }
 
 * {
@@ -213,7 +213,7 @@ h1 {
     --grid-top: 340px;
     --canvas-gutter: 120px;
     --grid-w: 1974px;
-    --canvas-h: 72000px;
+    --canvas-h: 44750px;
   }
 
   .title-block {
@@ -236,7 +236,7 @@ h1 {
     --grid-top: 260px;
     --canvas-gutter: 22px;
     --grid-w: 658px;
-    --canvas-h: 82000px;
+    --canvas-h: 66550px;
   }
 
   body {
