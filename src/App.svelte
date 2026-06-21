@@ -373,7 +373,7 @@
       <section class="title-block" bind:this={titleBlock} aria-label="Tiêu đề">
         <h1>Kho bìa sách giáo khoa Việt Nam</h1>
         <p class="subtitle">
-          1980-2026 / kho tư liệu hình ảnh đang biên soạn / {covers.length} bìa sách
+          Kho tư liệu hình ảnh đang biên soạn này tập hợp {covers.length} bìa sách từ năm 1980 đến 2026.
         </p>
         <p class="credit">
           bởi

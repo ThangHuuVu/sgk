@@ -18,16 +18,16 @@
   --visual-viewport-left: 0px;
   --visual-viewport-top: 0px;
   --zoom: 1;
-  --cover-w: 220px;
-  --cover-h: 311px;
+  --cover-w: 200px;
+  --cover-h: 283px;
   --grid-cols: 24;
-  --grid-gap-x: 22px;
-  --grid-gap-y: 84px;
+  --grid-gap-x: 20px;
+  --grid-gap-y: 78px;
   --grid-top: 260px;
   --canvas-gutter: 90px;
-  --grid-w: 5786px;
+  --grid-w: 5260px;
   --canvas-w: calc(var(--grid-w) + (2 * var(--canvas-gutter)));
-  --canvas-h: 16380px;
+  --canvas-h: 15200px;
 }
 
 * {
@@ -347,13 +347,15 @@ input {
 
 .title-block {
   display: flex;
+  width: calc((var(--cover-w) * 3) + (var(--grid-gap-x) * 2));
   min-height: calc(var(--cover-h) + 54px);
-  grid-column: 12 / span 2;
+  grid-column: 1 / -1;
   grid-row: 6;
   flex-direction: column;
   justify-content: center;
   align-self: stretch;
-  padding: 0 10px 54px;
+  justify-self: center;
+  padding: 0 14px 54px;
   pointer-events: none;
   text-align: center;
 }
@@ -517,15 +519,15 @@ h1 {
 
 @media (max-width: 1180px) {
   :root {
-    --cover-w: 210px;
-    --cover-h: 297px;
+    --cover-w: 190px;
+    --cover-h: 269px;
     --grid-cols: 8;
-    --grid-gap-x: 42px;
-    --grid-gap-y: 72px;
+    --grid-gap-x: 36px;
+    --grid-gap-y: 68px;
     --grid-top: 230px;
     --canvas-gutter: 60px;
-    --grid-w: 1974px;
-    --canvas-h: 44640px;
+    --grid-w: 1772px;
+    --canvas-h: 41400px;
   }
 
   .title-block {
@@ -540,15 +542,15 @@ h1 {
 
 @media (max-width: 720px) {
   :root {
-    --cover-w: 148px;
-    --cover-h: 209px;
+    --cover-w: 92px;
+    --cover-h: 130px;
     --grid-cols: 8;
-    --grid-gap-x: 28px;
-    --grid-gap-y: 58px;
+    --grid-gap-x: 24px;
+    --grid-gap-y: 40px;
     --grid-top: 190px;
     --canvas-gutter: 24px;
-    --grid-w: 1380px;
-    --canvas-h: 33600px;
+    --grid-w: 904px;
+    --canvas-h: 23500px;
   }
 
   body {
@@ -556,9 +558,9 @@ h1 {
   }
 
   .title-block {
-    width: min(calc(var(--visual-viewport-w) - 34px), 340px);
+    width: min(calc(var(--visual-viewport-w) - 34px), 324px);
     min-height: calc(var(--cover-h) + 54px);
-    grid-column: 1 / span 2;
+    grid-column: 3 / span 3;
     grid-row: 6;
     justify-self: center;
     padding: 0 8px 42px;
@@ -569,7 +571,7 @@ h1 {
   }
 
   h1 {
-    font-size: clamp(32px, 9.2vw, 40px);
+    font-size: clamp(27px, 7.4vw, 32px);
   }
 
   .subtitle {
@@ -585,6 +587,10 @@ h1 {
   }
 
   .specimen figcaption {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     font-size: 10px;
   }
 
