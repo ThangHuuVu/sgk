@@ -1,7 +1,0 @@
-node_modules
-dist
-.git
-.vercel
-.env*.local
-public/images
-sources

@@ -321,8 +321,8 @@
           1980-2026 / kho tư liệu hình ảnh đang biên soạn / {covers.length} bìa sách
         </p>
         <p class="credit">
-          by
-          <a href="https://github.com/ThangHuuVu" target="_blank" rel="noreferrer">ThangHuuVu</a>
+          bởi
+          <a href="https://github.com/ThangHuuVu" target="_blank" rel="noreferrer">Vũ Hữu Thắng</a>
         </p>
       </section>
 
