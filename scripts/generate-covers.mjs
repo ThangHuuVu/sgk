@@ -13,6 +13,7 @@ const imageMap = existsSync(r2MapPath)
 const variantMap = existsSync(r2VariantMapPath)
   ? JSON.parse(readFileSync(r2VariantMapPath, "utf8"))
   : {};
+const coverAssetBaseUrl = process.env.COVER_ASSET_BASE_URL?.replace(/\/$/, "");
 
 function parseCsv(text) {
   const rows = [];
@@ -70,14 +71,14 @@ function variantPathFor(localFile, width) {
   return `variants/${width}/${withoutExtension}.webp`;
 }
 
-function cachePathFor(url) {
-  if (!url || url.startsWith("/")) {
+function assetUrlFor(url) {
+  if (!url || !coverAssetBaseUrl || url.startsWith("/")) {
     return url;
   }
 
   try {
     const parsed = new URL(url);
-    return `/covers/${parsed.pathname.replace(/^\/+/, "")}`;
+    return `${coverAssetBaseUrl}${parsed.pathname}`;
   } catch {
     return url;
   }
@@ -88,7 +89,7 @@ function variantsFor(localFile) {
   const variants = widths
     .map((width) => ({
       width,
-      url: cachePathFor(variantMap[variantPathFor(localFile, width)] ?? ""),
+      url: assetUrlFor(variantMap[variantPathFor(localFile, width)] ?? ""),
     }))
     .filter((variant) => variant.url);
 
@@ -112,8 +113,8 @@ function normalizeCover(row) {
     year: clean(row.publication_year_or_era),
     confidence: clean(row.date_confidence),
     localFile,
-    imagePath: cachePathFor(imageMap[localFile]) ?? `/${localFile}`,
-    thumbnailPath: variants.thumbnail || cachePathFor(imageMap[localFile]) || `/${localFile}`,
+    imagePath: assetUrlFor(imageMap[localFile]) ?? `/${localFile}`,
+    thumbnailPath: variants.thumbnail || assetUrlFor(imageMap[localFile]) || `/${localFile}`,
     imageSrcset: variants.srcset,
     sourceUrl: clean(row.page_url),
     sourceName: clean(row.source_name),
