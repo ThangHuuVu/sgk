@@ -59,11 +59,11 @@ input {
 .app-controls {
   position: fixed;
   right: 16px;
-  bottom: 16px;
-  left: 50%;
-  z-index: 20;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 50vw;
+  z-index: 100;
   display: flex;
-  width: min(calc(100vw - 32px), 560px);
+  width: min(calc(100dvw - 32px), 560px);
   min-height: calc(var(--control-h) + 10px);
   align-items: center;
   justify-content: space-between;
@@ -572,8 +572,9 @@ h1 {
 
   .app-controls {
     right: auto;
-    bottom: 10px;
-    width: min(calc(100vw - 20px), 560px);
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    left: 50vw;
+    width: min(calc(100dvw - 20px), 560px);
     align-items: stretch;
   }
 
