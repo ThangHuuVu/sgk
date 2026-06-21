@@ -1,17 +1,55 @@
 <script>
   import { onMount } from "svelte";
   import { covers } from "./lib/covers.js";
+  import IconButton from "./lib/components/IconButton.svelte";
+  import SearchField from "./lib/components/SearchField.svelte";
+  import ViewControls from "./lib/components/ViewControls.svelte";
 
   let zoomShell;
   let titleBlock;
   let zoom = 1;
+  let searchQuery = "";
+  let showCenterButton = false;
+  let isDockMinimized = true;
 
   const minZoom = 0.28;
   const maxZoom = 1.7;
+  const zoomStep = 0.14;
   const imageSizes = "(max-width: 720px) 148px, (max-width: 1180px) 210px, 220px";
+  const searchableCovers = covers.map((cover) => ({
+    cover,
+    searchText: normalizeSearchText([
+      cover.title,
+      cover.grade,
+      cover.year,
+      cover.subject,
+      cover.collection,
+      cover.imprint,
+      cover.volume,
+      cover.sourceName,
+    ]),
+  }));
+
+  $: normalizedQuery = normalizeSearchText([searchQuery]);
+  $: matchedCount = normalizedQuery
+    ? searchableCovers.filter((item) => item.searchText.includes(normalizedQuery)).length
+    : covers.length;
+  $: searchResultLabel = normalizedQuery ? `${matchedCount}/${covers.length}` : `${covers.length} bìa`;
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function normalizeSearchText(values) {
+    return values
+      .filter(Boolean)
+      .join(" ")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase()
+      .trim();
   }
 
   function getBaseSize() {
@@ -72,7 +110,15 @@
     });
   }
 
-  function centerTitle() {
+  function adjustZoom(delta) {
+    setZoom(zoom + delta);
+  }
+
+  function resetZoom() {
+    setZoom(1);
+  }
+
+  function centerTitle(behavior = "instant") {
     if (!titleBlock) {
       return;
     }
@@ -81,8 +127,25 @@
     window.scrollTo({
       left: window.scrollX + rect.left + rect.width / 2 - window.innerWidth / 2,
       top: window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2,
-      behavior: "instant",
+      behavior,
     });
+    requestAnimationFrame(updateCenterButton);
+  }
+
+  function updateCenterButton() {
+    if (!titleBlock) {
+      showCenterButton = false;
+      return;
+    }
+
+    const rect = titleBlock.getBoundingClientRect();
+    const titleX = rect.left + rect.width / 2;
+    const titleY = rect.top + rect.height / 2;
+    const viewportX = window.innerWidth / 2;
+    const viewportY = window.innerHeight / 2;
+    const distance = Math.hypot(titleX - viewportX, titleY - viewportY);
+
+    showCenterButton = distance > 360;
   }
 
   function captionFor(cover) {
@@ -168,6 +231,12 @@
     }
 
     let resizeFrame = 0;
+    let scrollFrame = 0;
+    function queueCenterButtonUpdate() {
+      cancelAnimationFrame(scrollFrame);
+      scrollFrame = requestAnimationFrame(updateCenterButton);
+    }
+
     function onResize() {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
@@ -178,12 +247,15 @@
     }
 
     window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("scroll", queueCenterButtonUpdate, { passive: true });
     window.addEventListener("resize", onResize);
 
     return () => {
       window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("scroll", queueCenterButtonUpdate);
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(resizeFrame);
+      cancelAnimationFrame(scrollFrame);
     };
   });
 </script>
@@ -192,22 +264,80 @@
   <title>Kho bìa sách giáo khoa Việt Nam</title>
 </svelte:head>
 
+<aside class:is-minimized={isDockMinimized} class="app-controls" aria-label="Công cụ xem kho bìa">
+  {#if isDockMinimized}
+    <button
+      class="dock-toggle"
+      type="button"
+      aria-label="Hiện thanh công cụ"
+      title="Hiện thanh công cụ"
+      on:click={() => (isDockMinimized = false)}
+    >
+      Công cụ
+    </button>
+  {:else}
+    <div class="dock-panel">
+      <SearchField bind:value={searchQuery} resultLabel={searchResultLabel} />
+      <div class="control-cluster">
+        <ViewControls
+          {zoom}
+          {minZoom}
+          {maxZoom}
+          onZoomOut={() => adjustZoom(-zoomStep)}
+          onZoomIn={() => adjustZoom(zoomStep)}
+          onResetZoom={resetZoom}
+        />
+        <div class="dock-end-controls">
+          <IconButton
+            label="Về trung tâm"
+            title="Về trung tâm"
+            variant="compact"
+            pressed={!showCenterButton}
+            on:click={() => centerTitle("smooth")}
+          >
+            ⌖
+          </IconButton>
+          <button
+            class="dock-toggle"
+            type="button"
+            aria-label="Ẩn thanh công cụ"
+            title="Ẩn thanh công cụ"
+            on:click={() => (isDockMinimized = true)}
+          >
+            Ẩn
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+</aside>
+
 <div class="zoom-shell" bind:this={zoomShell}>
   <main class="canvas" aria-label="Khung tranh hữu hạn của bìa sách giáo khoa Việt Nam">
     <section class="cover-grid" aria-label="Lưới bìa sách giáo khoa">
       <section class="title-block" bind:this={titleBlock} aria-label="Tiêu đề">
         <h1>Kho bìa sách giáo khoa<br />Việt Nam</h1>
-        <p class="subtitle">1980-2026 / kho tư liệu hình ảnh đang biên soạn</p>
-        <p class="meta">{covers.length} bìa sách</p>
+        <p class="subtitle">
+          1980-2026 / kho tư liệu hình ảnh đang biên soạn / {covers.length} bìa sách
+        </p>
+        <p class="credit">
+          by
+          <a href="https://github.com/ThangHuuVu" target="_blank" rel="noreferrer">ThangHuuVu</a>
+        </p>
       </section>
 
-      {#each covers as cover, index (cover.id)}
+      {#each searchableCovers as item, index (item.cover.id)}
+        {@const cover = item.cover}
+        {@const isSearchMiss = normalizedQuery && !item.searchText.includes(normalizedQuery)}
         <a
           class="specimen"
+          class:is-search-miss={isSearchMiss}
           href={cover.sourceUrl || undefined}
           target="_blank"
           rel="noreferrer"
           aria-label={`${cover.title}, lớp ${cover.grade}, ${cover.year}`}
+          aria-hidden={isSearchMiss ? "true" : undefined}
+          tabindex={isSearchMiss ? -1 : 0}
         >
           <figure>
             <img
@@ -227,5 +357,19 @@
         </a>
       {/each}
     </section>
+
+    <aside class="site-note" aria-label="Ghi chú">
+      <p>
+        Dự án phi thương mại, phục vụ lưu trữ hình ảnh và tham khảo thị giác. Bản quyền bìa sách, tên sách và nội dung liên quan thuộc về
+        <br />
+        các tác giả, nhà xuất bản và đơn vị giữ quyền tương ứng.
+      </p>
+      <p>
+        Ý tưởng khung tranh cuộn hữu hạn được gợi cảm hứng từ
+        <a href="https://www.ciggies.app/" target="_blank" rel="noreferrer">ciggies.app</a>.
+        Mã nguồn mở miễn phí:
+        <a href="https://github.com/ThangHuuVu/sgk" target="_blank" rel="noreferrer">GitHub</a>
+      </p>
+    </aside>
   </main>
 </div>
