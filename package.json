@@ -11,7 +11,10 @@
     "preview": "vite preview",
     "prepare:app": "node scripts/generate-covers.mjs",
     "images:sync": "node scripts/sync-public-images.mjs",
+    "images:processed": "node scripts/generate-processed-images.mjs",
     "images:variants": "node scripts/generate-image-variants.mjs",
+    "covers:discover": "node scripts/discover-cover-candidates.mjs",
+    "covers:pull": "node scripts/pull-cover-candidates.mjs",
     "r2:upload": "node scripts/upload-r2-images.mjs",
     "r2:upload:variants": "node scripts/upload-r2-variants.mjs",
     "cf:deploy": "npm run build && npx wrangler pages deploy dist --project-name sgk --branch main"

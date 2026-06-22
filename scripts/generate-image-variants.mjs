@@ -1,7 +1,7 @@
 import { mkdirSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import sharp from "sharp";
+import { processedImage } from "./image-processing.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const imageRoot = join(root, "images");
@@ -29,7 +29,7 @@ const files = listFiles(imageRoot);
 let completed = 0;
 
 for (const file of files) {
-  const image = sharp(file, { failOn: "none" }).rotate();
+  const image = processedImage(file);
 
   await Promise.all(
     widths.map(async (width) => {

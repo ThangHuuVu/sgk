@@ -10,10 +10,11 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const imageRoot = join(root, "images");
+const imageRoot = join(root, "generated", "r2-images");
 const mapPath = join(root, "r2-map.json");
 const bucket = process.env.R2_BUCKET ?? "sgk-covers";
 const publicBaseUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
+const forceUpload = process.env.R2_FORCE_UPLOAD === "1";
 
 if (!publicBaseUrl) {
   throw new Error("Thiếu R2_PUBLIC_URL, ví dụ: https://covers.example.com");
@@ -108,9 +109,9 @@ async function worker() {
   while (cursor < files.length) {
     const file = files[cursor];
     cursor += 1;
-    const pathname = relative(root, file);
+    const pathname = `images/${relative(imageRoot, file)}`;
 
-    if (nextMap[pathname]) continue;
+    if (nextMap[pathname] && !forceUpload) continue;
 
     nextMap[pathname] = await uploadWithRetry(pathname, file);
     uploaded += 1;

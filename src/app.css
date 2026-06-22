@@ -36,6 +36,7 @@
   --grid-w: 5260px;
   --canvas-w: calc(var(--grid-w) + (2 * var(--canvas-gutter)));
   --canvas-h: 14000px;
+  --site-note-offset-x: calc((var(--cover-w) + var(--grid-gap-x)) / -2);
 }
 
 * {
@@ -532,6 +533,7 @@ h1 {
   font-size: 12px;
   line-height: 1.55;
   text-align: center;
+  transform: translateX(var(--site-note-offset-x));
 }
 
 .site-note p {
@@ -560,6 +562,7 @@ h1 {
     --canvas-gutter: 38px;
     --grid-w: 1772px;
     --canvas-h: 39000px;
+    --site-note-offset-x: 0px;
   }
 
   .title-block {
@@ -583,6 +586,7 @@ h1 {
     --canvas-gutter: 14px;
     --grid-w: 904px;
     --canvas-h: 20800px;
+    --site-note-offset-x: calc((var(--cover-w) + var(--grid-gap-x)) / -2);
   }
 
   body {

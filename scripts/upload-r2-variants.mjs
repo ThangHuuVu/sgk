@@ -14,9 +14,10 @@ const variantRoot = join(root, "generated", "r2-variants");
 const mapPath = join(root, "r2-variant-map.json");
 const bucket = process.env.R2_BUCKET ?? "sgk-covers";
 const publicBaseUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
+const forceUpload = process.env.R2_FORCE_UPLOAD === "1";
 
 if (!publicBaseUrl) {
-  throw new Error("Thiếu R2_PUBLIC_URL, ví dụ: https://pub-xxxxx.r2.dev");
+  throw new Error("Thiếu R2_PUBLIC_URL, ví dụ: https://assets.sgkarchive.org");
 }
 
 function listFiles(directory) {
@@ -100,7 +101,7 @@ async function worker() {
     const variantPath = relative(variantRoot, file);
     const pathname = `variants/${variantPath}`;
 
-    if (nextMap[pathname]) continue;
+    if (nextMap[pathname] && !forceUpload) continue;
 
     nextMap[pathname] = await uploadWithRetry(pathname, file);
     uploaded += 1;
