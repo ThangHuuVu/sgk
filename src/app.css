@@ -634,6 +634,21 @@ h1 {
     font-size: 11px;
   }
 
+  .site-note {
+    top: calc(var(--grid-top) + (5 * (var(--cover-h) + 54px + var(--grid-gap-y))) + 280px);
+    bottom: auto;
+    left: calc(var(--canvas-gutter) + (2 * (var(--cover-w) + var(--grid-gap-x))) + (((3 * var(--cover-w)) + (2 * var(--grid-gap-x))) / 2));
+    width: min(calc(var(--visual-viewport-w) - 32px), 330px);
+    max-width: none;
+    font-size: 11px;
+    line-height: 1.5;
+    transform: translateX(-50%);
+  }
+
+  .site-note p {
+    max-width: none;
+  }
+
   .app-controls-layer {
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     padding: 0 8px;
