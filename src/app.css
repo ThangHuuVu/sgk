@@ -1,5 +1,5 @@
 @font-face {
-  font-display: swap;
+  font-display: block;
   font-family: "Danh Da";
   font-style: normal;
   font-weight: 700;
@@ -83,7 +83,12 @@ input {
   position: fixed;
   inset: 0;
   overflow: auto;
+  opacity: 0;
   -webkit-overflow-scrolling: touch;
+}
+
+.app-viewport.is-ready {
+  opacity: 1;
 }
 
 .app-controls-layer {

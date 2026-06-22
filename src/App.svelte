@@ -15,6 +15,7 @@
   let searchAnnouncement = "";
   let showCenterButton = false;
   let isDockMinimized = true;
+  let isViewportReady = false;
 
   const minZoom = 0.28;
   const maxZoom = 1.7;
@@ -271,6 +272,43 @@
     requestAnimationFrame(updateCenterButton);
   }
 
+  function centerTitleBeforePaint() {
+    if (!viewport || !titleBlock) {
+      return;
+    }
+
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+
+    const size = viewportSize();
+    const titleRect = titleBlock.getBoundingClientRect();
+    const shellRect = zoomShell?.getBoundingClientRect();
+    const titleCenterX = titleRect.left - (shellRect?.left ?? 0) + titleRect.width / 2;
+    const titleCenterY = titleRect.top - (shellRect?.top ?? 0) + titleRect.height / 2;
+    const maxLeft = Math.max(0, viewport.scrollWidth - size.width);
+    const maxTop = Math.max(0, viewport.scrollHeight - size.height);
+
+    viewport.scrollLeft = clamp(titleCenterX - size.width / 2, 0, maxLeft);
+    viewport.scrollTop = clamp(titleCenterY - size.height / 2, 0, maxTop);
+  }
+
+  function removeInitialLoader() {
+    document.getElementById("initial-loader")?.remove();
+  }
+
+  async function waitForTitleFont() {
+    if (!document.fonts?.ready) {
+      return;
+    }
+
+    try {
+      await document.fonts.load('700 82px "Danh Da"');
+      await document.fonts.ready;
+    } catch {
+      // If the Font Loading API fails, keep the app usable with the fallback font.
+    }
+  }
+
   function scrollCoverIntoView(coverId, behavior = "smooth") {
     const target = document.getElementById(`cover-${coverId}`);
     if (!target) {
@@ -421,17 +459,41 @@
   }
 
   onMount(() => {
+    let didCancelInitialView = false;
+
     syncVisualViewportVars();
     measureBaseSize();
-    setZoom(1);
+    document.documentElement.style.setProperty("--zoom", String(zoom));
+
+    async function prepareInitialView() {
+      await waitForTitleFont();
+      if (didCancelInitialView) {
+        return;
+      }
+
+      centerTitleBeforePaint();
+      isViewportReady = true;
+      removeInitialLoader();
+      requestAnimationFrame(updateCenterButton);
+    }
+
+    prepareInitialView();
 
     function queueInitialCenter() {
       centerTitle();
       requestAnimationFrame(updateCenterButton);
     }
 
-    requestAnimationFrame(() => requestAnimationFrame(queueInitialCenter));
-    const initialCenterTimeout = window.setTimeout(queueInitialCenter, 450);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (isViewportReady) {
+        queueInitialCenter();
+      }
+    }));
+    const initialCenterTimeout = window.setTimeout(() => {
+      if (isViewportReady) {
+        queueInitialCenter();
+      }
+    }, 450);
 
     function onWheel(event) {
       if (!event.ctrlKey && !event.metaKey) {
@@ -470,6 +532,7 @@
     window.visualViewport?.addEventListener("resize", onResize);
 
     return () => {
+      didCancelInitialView = true;
       scrollTarget.removeEventListener("wheel", onWheel);
       scrollTarget.removeEventListener("scroll", queueViewportUpdate);
       window.removeEventListener("resize", onResize);
@@ -544,7 +607,7 @@
   </aside>
 </div>
 
-<div class="app-viewport" bind:this={viewport}>
+<div class:is-ready={isViewportReady} class="app-viewport" bind:this={viewport}>
   <div class="zoom-shell" bind:this={zoomShell}>
     <main class="canvas" aria-label="Khung tranh hữu hạn của bìa sách giáo khoa Việt Nam">
     <section class="cover-grid" aria-label="Lưới bìa sách giáo khoa">
