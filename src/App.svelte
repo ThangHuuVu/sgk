@@ -63,6 +63,31 @@
     const size = viewportSize();
     document.documentElement.style.setProperty("--visual-viewport-w", `${size.width}px`);
     document.documentElement.style.setProperty("--visual-viewport-h", `${size.height}px`);
+    syncCanvasHeight();
+  }
+
+  function cssNumber(name, fallback) {
+    const raw = window.getComputedStyle(document.documentElement).getPropertyValue(name);
+    const value = Number.parseFloat(raw);
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function syncCanvasHeight() {
+    const gridCols = Math.max(1, Math.round(cssNumber("--grid-cols", 24)));
+    const coverHeight = cssNumber("--cover-h", 283);
+    const gridTop = cssNumber("--grid-top", 56);
+    const gridGapY = cssNumber("--grid-gap-y", 54);
+    const captionHeight = 54;
+    const footerGap = 240;
+    const footer = document.querySelector(".site-note");
+    const footerStyle = footer ? window.getComputedStyle(footer) : null;
+    const footerHeight = footer?.getBoundingClientRect().height ?? 90;
+    const footerBottom = footerStyle ? Number.parseFloat(footerStyle.bottom) || 64 : 64;
+    const gridRows = Math.ceil((sortedCovers.length + 1) / gridCols);
+    const gridHeight = gridRows * (coverHeight + captionHeight) + Math.max(0, gridRows - 1) * gridGapY;
+    const canvasHeight = Math.ceil(gridTop + gridHeight + footerGap + footerHeight + footerBottom);
+
+    document.documentElement.style.setProperty("--canvas-h", `${canvasHeight}px`);
   }
 
   function scrollLeft() {
