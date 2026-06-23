@@ -662,15 +662,17 @@
           tabindex={isSearchMiss ? -1 : 0}
         >
           <figure>
-            <img
-              src={cover.thumbnailPath || cover.imagePath}
-              srcset={cover.imageSrcset || undefined}
-              sizes={cover.imageSrcset ? imageSizes : undefined}
-              alt={`${cover.title}, lớp ${cover.grade}`}
-              loading={isPriorityCover(index) ? "eager" : "lazy"}
-              decoding="async"
-              fetchpriority={isPriorityCover(index) ? "high" : "auto"}
-            />
+            <span class="image-frame">
+              <img
+                src={cover.thumbnailPath || cover.imagePath}
+                srcset={cover.imageSrcset || undefined}
+                sizes={cover.imageSrcset ? imageSizes : undefined}
+                alt={`${cover.title}, lớp ${cover.grade}`}
+                loading={isPriorityCover(index) ? "eager" : "lazy"}
+                decoding="async"
+                fetchpriority={isPriorityCover(index) ? "high" : "auto"}
+              />
+            </span>
             <figcaption>
               <b>{cover.title}</b>
               <span>{captionFor(cover)}</span>

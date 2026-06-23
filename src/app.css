@@ -466,11 +466,16 @@ h1 {
 }
 
 .specimen figure {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.image-frame {
   position: relative;
   display: block;
   width: 100%;
   height: var(--cover-h);
-  margin: 0;
   overflow: hidden;
   border: 1px solid rgba(22, 19, 15, 0.2);
   background: rgba(255, 250, 239, 0.28);
@@ -491,8 +496,8 @@ h1 {
     transform 160ms ease;
 }
 
-.specimen:hover figure,
-.specimen:focus-visible figure {
+.specimen:hover .image-frame,
+.specimen:focus-visible .image-frame {
   box-shadow: 0 22px 42px rgba(22, 19, 15, 0.22);
 }
 
@@ -502,7 +507,7 @@ h1 {
   transform: translateY(-3px);
 }
 
-.specimen[aria-current="true"] figure {
+.specimen[aria-current="true"] .image-frame {
   border-color: var(--line-strong);
   box-shadow:
     0 0 0 4px rgba(47, 95, 134, 0.18),
