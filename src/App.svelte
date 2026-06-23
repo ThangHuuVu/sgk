@@ -621,8 +621,6 @@
           <a href="https://github.com/ThangHuuVu" target="_blank" rel="noreferrer">Vũ Hữu Thắng</a>
         </p>
       </section>
-      <div class="mobile-footer-reserve" aria-hidden="true"></div>
-
       {#each searchableCovers as item, index (item.cover.id)}
         {@const cover = item.cover}
         {@const isSearchMiss = normalizedQuery && !matchingCoverIds.has(cover.id)}
