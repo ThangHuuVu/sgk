@@ -1,10 +1,11 @@
 node_modules
 dist
 .vercel
-.env*.local
+.env
+.env*
+!.env.example
 generated
 images
 public/images
 src/lib/covers.js
 sources
-.env*.local
