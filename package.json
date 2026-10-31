@@ -20,11 +20,11 @@
     "cf:deploy": "npm run build && npx wrangler pages deploy dist --project-name sgk --branch main"
   },
   "dependencies": {
-    "sharp": "^0.34.0"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "svelte": "^5.0.0",
-    "vite": "^6.0.0"
+    "vite": "^6.4.5"
   }
 }
